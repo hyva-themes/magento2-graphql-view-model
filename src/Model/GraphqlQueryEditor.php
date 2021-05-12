@@ -157,10 +157,8 @@ class GraphqlQueryEditor
      */
     private function findObjectFieldByName(Node $node, string $name): ?ObjectFieldNode
     {
-        if (!isset($node->value->fields)) {
-            return null;
-        }
-        foreach ($node->value->fields as $field) {
+        $children = $node->value->fields ?? [];
+        foreach ($children as $field) {
             if ($field->name && $field->name->value == $name) {
                 return $field;
             }
@@ -175,10 +173,8 @@ class GraphqlQueryEditor
      */
     private function findFieldSelectionByName(Node $node, string $name): ?FieldNode
     {
-        if (!is_object($node->selectionSet)) {
-            return null;
-        }
-        foreach ($node->selectionSet->selections as $field) {
+        $children = is_object($node->selectionSet) ? $node->selectionSet->selections : [];
+        foreach ($children as $field) {
             if ($field->name && $field->name->value === $name) {
                 return $field;
             }
