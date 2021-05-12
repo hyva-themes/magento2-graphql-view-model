@@ -48,7 +48,7 @@ class GraphqlQueryEditor
      * Add GraphQL query or mutation field at given path.
      *
      * Example:
-     * $object->setFieldIn($ast, ['products', 'items', 'small_image'], 'url_webp');
+     * $editor->setFieldIn($ast, ['products', 'items', 'small_image'], 'url_webp');
      *
      * @param DocumentNode $ast
      * @param array $path
@@ -72,8 +72,8 @@ class GraphqlQueryEditor
      * Add or set argument to value at given path for GraphQL query or mutation.
      *
      * Examples:
-     * $sut->setArgumentIn($ast, ['products', 'filter', 'name'], 'match', 'Tank');
-     * $sut->setArgumentIn($ast, ['products'], 'pageSize', 2);
+     * $editor->setArgumentIn($ast, ['products', 'filter', 'name'], 'match', 'Tank');
+     * $editor->setArgumentIn($ast, ['products'], 'pageSize', 2);
      *
      * @param DocumentNode $ast
      * @param array $path
