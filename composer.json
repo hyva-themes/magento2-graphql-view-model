@@ -1,0 +1,19 @@
+{
+    "name": "hyva-themes/magento2-graphql-view-model",
+    "description": "Provide ability to customize GraphQL queries and mutations for Hyvä themes.",
+    "require": {
+        "php": "^7.3.0"
+    },
+    "type": "magento2-module",
+    "license": [
+        "BSD-3-Clause"
+    ],
+    "autoload": {
+        "files": [
+            "src/registration.php"
+        ],
+        "psr-4": {
+            "Hyva\\GraphqlViewModel\\": "src/"
+        }
+    }
+}
