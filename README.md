@@ -16,16 +16,15 @@ Compatible with Magento 2.3.4 and higher.
 
 It adds:
  - `\Hyva\GraphqlViewModel\ViewModel\GraphqlViewModel`, to be accessed via the view model registry.
-   The method `GraphqlViewModel::toAst` and `GraphqlViewModel::query` can be used as plugin targets.
-- `\Hyva\GraphqlViewModel\Model\GraphqlQueryEditor` which can be used to add fields and arguments to GraphQL queries.
+ - `\Hyva\GraphqlViewModel\Model\GraphqlQueryEditor` which can be used to add fields and arguments to GraphQL queries.
  - The event `hyva_graphql_query_before_render`
    Event observers receive the parsed query that can be manipulated with the `GraphqlQueryEditor`
 
 ## Usage
 
 In a `.phtml` template, to make a query customizable, wrap it in the `GraphqlViewModel::query()` method:
-```
-$query = $gqlViewModel->query("product_query", "
+```php
+$query = $gqlViewModel->query("product_list_query", "
 products(filter: {} pageSize: 20) {
   items {
     {$type}_products {
@@ -39,19 +38,39 @@ products(filter: {} pageSize: 20) {
 }");
 <?= $query ?>
 ```
-The first argument is used to identify a query in event observers or plugins.
+The first argument is used to identify a query in event observers.
+
+To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
+```php
+if ($event->getData('name') !== 'product_list_query') {
+    return;
+}
+
+$query = $event->getData('query');
+$gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
+
+// add a single field to a result object
+$gqlEditor->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
+
+// add multiple fields to a result object
+$gqlEditor->setFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
+
+// add a query argument
+$gqlEditor->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
+$gqlEditor->setArgumentIn($query, ['products'], 'pageSize', 2);
+```
 
 ## Installation
   
 1. Install via composer
-    ```
-    composer config repositories.hyva-themes/magento2-graphql-view-model git git@github.com:hyva-themes/magento2-graphql-view-model.git
-    composer require hyva-themes/magento2-graphql-view-model
-    ```
+```
+composer config repositories.hyva-themes/magento2-graphql-view-model git git@github.com:hyva-themes/magento2-graphql-view-model.git
+composer require hyva-themes/magento2-graphql-view-model
+```
 2. Enable module
-    ```
-    bin/magento setup:upgrade
-    ```
+```
+bin/magento module:enable Hyva_GraphqlViewModel
+```
 ## Configuration
   
 No configuration needed.

@@ -27,7 +27,7 @@ class GraphqlViewModel implements ArgumentInterface
         return $this->toString($this->toAst($name, $query));
     }
 
-    public function toAst(string $name, string $query): \GraphQL\Language\AST\DocumentNode
+    private function toAst(string $name, string $query): \GraphQL\Language\AST\DocumentNode
     {
         $source = new \GraphQL\Language\Source($query);
         $ast    = \GraphQL\Language\Parser::parse($source);
