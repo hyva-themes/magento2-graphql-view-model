@@ -45,19 +45,22 @@ To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
 if ($event->getData('name') !== 'product_list_query') {
     return;
 }
+$query = $event->getData('gql_container')->getData('query');
 
-$query = $event->getData('query');
 $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
 
 // add a single field to a result object
-$gqlEditor->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
+$query = $gqlEditor->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
 
 // add multiple fields to a result object
-$gqlEditor->setFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
+$query = $gqlEditor->setFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
 
 // add a query argument
-$gqlEditor->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
-$gqlEditor->setArgumentIn($query, ['products'], 'pageSize', 2);
+$query = $gqlEditor->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
+$query = $gqlEditor->setArgumentIn($query, ['products'], 'pageSize', 2);
+
+// set updated query back on container
+$event->getData('gql_container')->setData('query', $query);
 ```
 
 ## Installation

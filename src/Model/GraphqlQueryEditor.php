@@ -48,15 +48,16 @@ class GraphqlQueryEditor
      * Add GraphQL query or mutation field at given path.
      *
      * Example:
-     * $editor->setFieldIn($ast, ['products', 'items', 'small_image'], 'url_webp');
+     * $query = $editor->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
      *
-     * @param DocumentNode $ast
+     * @param string $query
      * @param array $path
      * @param string $field
-     * @return DocumentNode
+     * @return string
      */
-    public function setFieldIn(DocumentNode $ast, array $path, string $field): DocumentNode
+    public function setFieldIn(string $query, array $path, string $field): string
     {
+        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
         $operation = $this->getFirstOperationNode($ast);
         $target    = $this->getFieldSelection($operation, $path);
         foreach (preg_split('/\s+/', $field) as $new) {
@@ -65,24 +66,25 @@ class GraphqlQueryEditor
             }
         }
 
-        return $ast;
+        return \GraphQL\Language\Printer::doPrint($ast);
     }
 
     /**
      * Add or set argument to value at given path for GraphQL query or mutation.
      *
      * Examples:
-     * $editor->setArgumentIn($ast, ['products', 'filter', 'name'], 'match', 'Tank');
-     * $editor->setArgumentIn($ast, ['products'], 'pageSize', 2);
+     * $query = $editor->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
+     * $query = $editor->setArgumentIn($query, ['products'], 'pageSize', 2);
      *
-     * @param DocumentNode $ast
+     * @param string $query
      * @param array $path
      * @param string $key
      * @param string|int|float|bool|null $value
-     * @return DocumentNode
+     * @return string
      */
-    public function setArgumentIn(DocumentNode $ast, array $path, string $key, $value): DocumentNode
+    public function setArgumentIn(string $query, array $path, string $key, $value): string
     {
+        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
         $operationField = array_shift($path); // e.g. products
         $argumentName   = array_shift($path); // e.g. filter
         $operationField = $this->getFieldSelection($this->getFirstOperationNode($ast), [$operationField]);
@@ -90,7 +92,7 @@ class GraphqlQueryEditor
         $target         = $this->getArgumentField($argument, $path);
         $this->setArgumentFieldIn($target, $key, $value);
 
-        return $ast;
+        return \GraphQL\Language\Printer::doPrint($ast);
     }
 
     private function getArgument(FieldNode $target, string $name): ArgumentNode

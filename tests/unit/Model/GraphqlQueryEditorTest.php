@@ -7,7 +7,6 @@
 
 namespace Hyva\GraphqlViewModel\Model;
 
-use GraphQL\Language\Printer;
 use PHPUnit\Framework\TestCase;
 
 class GraphqlQueryEditorTest extends TestCase
@@ -47,21 +46,18 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }
 ';
-
-        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
-
         $sut = new GraphqlQueryEditor();
 
         // new field in existing query object
-        $sut->setFieldIn($ast, ['products', 'items', 'small_image'], 'url_webp');
+        $query = $sut->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
 
         // multiple fields in new query object
-        $sut->setFieldIn($ast, ['products', 'items', 'image'], 'url label url_webp');
+        $query = $sut->setFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
 
         // existing field, idempotent
-        $sut->setFieldIn($ast, ['products'], 'total_count');
+        $query = $sut->setFieldIn($query, ['products'], 'total_count');
 
-        $this->assertSame($expected, Printer::doPrint($ast));
+        $this->assertSame($expected, $query);
     }
 
     public function testSetsGivenArgumentsOnQuery()
@@ -93,13 +89,12 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }
 ';
-        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
-
         $sut = new GraphqlQueryEditor();
 
-        $sut->setArgumentIn($ast, ['products', 'filter', 'name'], 'match', 'Tank');
-        $sut->setArgumentIn($ast, ['products'], 'pageSize', 2);
+        $query = $sut->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
 
-        $this->assertSame($expected, Printer::doPrint($ast));
+        $query = $sut->setArgumentIn($query, ['products'], 'pageSize', 2);
+
+        $this->assertSame($expected, $query);
     }
 }
