@@ -23,4 +23,17 @@ class GraphqlViewModelTest extends TestCase
         $sut = new GraphqlViewModel($dummyEventDispatcher);
         $this->assertSame($query, trim($sut->query('test', $query)));
     }
+
+    public function testDispatchesEvent()
+    {
+        $queryIdentifier = 'test';
+        $mockEventDispatcher = $this->createMock(EventManager::class);
+        $sut = new GraphqlViewModel($mockEventDispatcher);
+
+        $mockEventDispatcher->expects($this->once())
+                            ->method('dispatch')
+                            ->with('hyva_graphql_query_before_render_' . $queryIdentifier,  $this->anything());
+
+        $sut->query($queryIdentifier, '{dummy}');
+    }
 }

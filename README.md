@@ -17,14 +17,14 @@ Compatible with Magento 2.3.4 and higher.
 It adds:
  - `\Hyva\GraphqlViewModel\ViewModel\GraphqlViewModel`, to be accessed via the view model registry.
  - `\Hyva\GraphqlViewModel\Model\GraphqlQueryEditor` which can be used to add fields and arguments to GraphQL queries.
- - The event `hyva_graphql_query_before_render`
-   Event observers receive the parsed query that can be manipulated with the `GraphqlQueryEditor`
+ - The event `hyva_graphql_query_before_render_` + query identifier
+   Event observers receive the query string and can manipulate it with the `GraphqlQueryEditor`
 
 ## Usage
 
 In a `.phtml` template, to make a query customizable, wrap it in the `GraphqlViewModel::query()` method:
 ```php
-$query = $gqlViewModel->query("product_list_query", "
+<?= $gqlViewModel->query("product_list_query", "
 products(filter: {} pageSize: 20) {
   items {
     {$type}_products {
@@ -35,16 +35,14 @@ products(filter: {} pageSize: 20) {
         }
     }
   }
-}");
-<?= $query ?>
+}")
+?>
 ```
-The first argument is used to identify a query in event observers.
+The first argument is the event name suffix, the second argument is the query or mutation.
 
 To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
 ```php
-if ($event->getData('name') !== 'product_list_query') {
-    return;
-}
+
 $query = $event->getData('gql_container')->getData('query');
 
 $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
