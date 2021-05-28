@@ -10,6 +10,7 @@ namespace Hyva\GraphqlViewModel\ViewModel;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use function array_merge as merge;
 
 class GraphqlViewModel implements ArgumentInterface
 {
@@ -37,12 +38,13 @@ class GraphqlViewModel implements ArgumentInterface
      *
      * @param string $queryIdentifier
      * @param string $query
+     * @param mixed[] $eventParams
      * @return string
      */
-    public function query(string $queryIdentifier, string $query): string
+    public function query(string $queryIdentifier, string $query, array $eventParams = []): string
     {
         $container = new DataObject(['query' => $query]);
-        $params    = ['gql_container' => $container];
+        $params = merge($eventParams, ['gql_container' => $container]);
         $this->eventManager->dispatch('hyva_graphql_render_before_' . $queryIdentifier, $params);
 
         return $container->getData('query');

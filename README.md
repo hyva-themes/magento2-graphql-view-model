@@ -35,10 +35,13 @@ products(filter: {} pageSize: 20) {
         }
     }
   }
-}")
+}", ['type' => $type])
 ?>
 ```
-The first argument is the event name suffix, the second argument is the query or mutation.
+The first argument is the event name suffix.  
+The second argument is the query or mutation as a string.  
+The third argument is optional and - if specified - will be merged into the event arguments.
+
 In the above example the full event name would be `hyva_graphql_render_before_product_list_query`
 
 To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
@@ -47,14 +50,16 @@ To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
 public function execute(Observer $event)
 {
     $queryString = $event->getData('gql_container')->getData('query');
-    
+    $linkType  = $event->getData('type');
+    $path  = ['products', 'items', ($linkType ? "{$linkType}_products" : 'products'), 'small_image'];
+
     $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
     
     // add a single field to a result object
-    $queryString = $gqlEditor->addFieldIn($queryString, ['products', 'items', 'small_image'], 'url_webp');
+    $queryString = $gqlEditor->addFieldIn($queryString, $path, 'url_webp');
     
     // add multiple fields to a result object
-    $queryString = $gqlEditor->addFieldIn($queryString, ['products', 'items', 'image'], 'url label url_webp');
+    $queryString = $gqlEditor->addFieldIn($queryString, ['products', 'items', 'products', 'image'], 'label url_webp');
     
     // add a query argument
     $queryString = $gqlEditor->addArgumentIn($queryString, ['products', 'filter', 'name'], 'match', 'Tank');
