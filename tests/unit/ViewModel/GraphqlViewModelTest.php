@@ -27,13 +27,18 @@ class GraphqlViewModelTest extends TestCase
     public function testDispatchesEvent()
     {
         $queryIdentifier = 'test';
+        $additionalParamValue = true;
         $mockEventDispatcher = $this->createMock(EventManager::class);
         $sut = new GraphqlViewModel($mockEventDispatcher);
 
+
+        $withAdditionalParams = $this->callback(function (array $params) use ($additionalParamValue) {
+            return ($params['additional'] ?? false) === $additionalParamValue;
+        });
         $mockEventDispatcher->expects($this->once())
                             ->method('dispatch')
-                            ->with('hyva_graphql_query_before_render_' . $queryIdentifier,  $this->anything());
+                            ->with('hyva_graphql_render_before_' . $queryIdentifier, $withAdditionalParams);
 
-        $sut->query($queryIdentifier, '{dummy}');
+        $sut->query($queryIdentifier, '{dummy}', ['additional' => $additionalParamValue]);
     }
 }

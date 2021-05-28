@@ -10,6 +10,7 @@ namespace Hyva\GraphqlViewModel\ViewModel;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
+use function array_merge as merge;
 
 class GraphqlViewModel implements ArgumentInterface
 {
@@ -26,7 +27,7 @@ class GraphqlViewModel implements ArgumentInterface
     /**
      * Dispatch event with query or mutation string to allow changing the query in event observers.
      *
-     * The event name is 'hyva_graphql_query_before_render_' with the query identifier as a event suffix.
+     * The event name is 'hyva_graphql_render_before_' with the query identifier as a event suffix.
      * To change the query, use the following code to fetch the query string.
      *     $query = $observer->getData('gql_container')->getData('query')
      *
@@ -37,13 +38,14 @@ class GraphqlViewModel implements ArgumentInterface
      *
      * @param string $queryIdentifier
      * @param string $query
+     * @param mixed[] $eventParams
      * @return string
      */
-    public function query(string $queryIdentifier, string $query): string
+    public function query(string $queryIdentifier, string $query, array $eventParams = []): string
     {
         $container = new DataObject(['query' => $query]);
-        $params    = ['gql_container' => $container];
-        $this->eventManager->dispatch('hyva_graphql_query_before_render_' . $queryIdentifier, $params);
+        $params = merge($eventParams, ['gql_container' => $container]);
+        $this->eventManager->dispatch('hyva_graphql_render_before_' . $queryIdentifier, $params);
 
         return $container->getData('query');
     }
