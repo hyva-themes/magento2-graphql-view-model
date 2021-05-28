@@ -49,13 +49,13 @@ class GraphqlQueryEditorTest extends TestCase
         $sut = new GraphqlQueryEditor();
 
         // new field in existing query object
-        $query = $sut->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
+        $query = $sut->addFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
 
         // multiple fields in new query object
-        $query = $sut->setFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
+        $query = $sut->addFieldIn($query, ['products', 'items', 'image'], 'url label url_webp');
 
         // existing field, idempotent
-        $query = $sut->setFieldIn($query, ['products'], 'total_count');
+        $query = $sut->addFieldIn($query, ['products'], 'total_count');
 
         $this->assertSame($expected, $query);
     }
@@ -91,9 +91,9 @@ class GraphqlQueryEditorTest extends TestCase
 ';
         $sut = new GraphqlQueryEditor();
 
-        $query = $sut->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
+        $query = $sut->addArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
 
-        $query = $sut->setArgumentIn($query, ['products'], 'pageSize', 2);
+        $query = $sut->addArgumentIn($query, ['products'], 'pageSize', 2);
 
         $this->assertSame($expected, $query);
     }

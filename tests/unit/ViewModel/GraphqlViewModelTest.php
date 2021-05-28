@@ -32,7 +32,7 @@ class GraphqlViewModelTest extends TestCase
 
         $mockEventDispatcher->expects($this->once())
                             ->method('dispatch')
-                            ->with('hyva_graphql_query_before_render_' . $queryIdentifier,  $this->anything());
+                            ->with('hyva_graphql_render_before_' . $queryIdentifier,  $this->anything());
 
         $sut->query($queryIdentifier, '{dummy}');
     }

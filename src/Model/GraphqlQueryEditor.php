@@ -48,14 +48,14 @@ class GraphqlQueryEditor
      * Add GraphQL query or mutation field at given path.
      *
      * Example:
-     * $query = $editor->setFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
+     * $query = $editor->addFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
      *
      * @param string $query
      * @param array $path
      * @param string $field
      * @return string
      */
-    public function setFieldIn(string $query, array $path, string $field): string
+    public function addFieldIn(string $query, array $path, string $field): string
     {
         $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
         $operation = $this->getFirstOperationNode($ast);
@@ -73,8 +73,8 @@ class GraphqlQueryEditor
      * Add or set argument to value at given path for GraphQL query or mutation.
      *
      * Examples:
-     * $query = $editor->setArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
-     * $query = $editor->setArgumentIn($query, ['products'], 'pageSize', 2);
+     * $query = $editor->addArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
+     * $query = $editor->addArgumentIn($query, ['products'], 'pageSize', 2);
      *
      * @param string $query
      * @param array $path
@@ -82,7 +82,7 @@ class GraphqlQueryEditor
      * @param string|int|float|bool|null $value
      * @return string
      */
-    public function setArgumentIn(string $query, array $path, string $key, $value): string
+    public function addArgumentIn(string $query, array $path, string $key, $value): string
     {
         $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
         $operationField = array_shift($path); // e.g. products
