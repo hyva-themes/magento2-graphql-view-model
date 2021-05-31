@@ -1,7 +1,5 @@
 # Hyvä Themes - GraphQL ViewModel module
 
-**Note: This module is currently experimental and might be removed or changed without notice**
-
 [![Hyvä Themes](https://repository-images.githubusercontent.com/300568807/f00eb480-55b1-11eb-93d2-074c3edd2d07)](https://hyva.io/)
 
 ## hyva-themes/magento2-graphql-view-model
