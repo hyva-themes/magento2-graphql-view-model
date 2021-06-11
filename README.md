@@ -73,6 +73,7 @@ query string they are not changed.
 
 The `addArgumentIn` method can be used to add new arguments to queries or mutations, or to overwrite values of existing arguments.
 
+For more examples including inline fragments please have a look at the `\Hyva\GraphqlViewModel\Model\GraphqlQueryEditorTest` class.
 
 ## Installation
   
