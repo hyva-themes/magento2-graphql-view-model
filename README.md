@@ -47,11 +47,11 @@ To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
 
 public function execute(Observer $event)
 {
+    $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
+    
     $queryString = $event->getData('gql_container')->getData('query');
     $linkType  = $event->getData('type');
     $path  = ['products', 'items', ($linkType ? "{$linkType}_products" : 'products'), 'small_image'];
-
-    $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
     
     // add a single field to a result object
     $queryString = $gqlEditor->addFieldIn($queryString, $path, 'url_webp');
