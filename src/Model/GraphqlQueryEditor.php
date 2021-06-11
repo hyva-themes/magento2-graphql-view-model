@@ -12,7 +12,9 @@ use GraphQL\Language\AST\BooleanValueNode;
 use GraphQL\Language\AST\DocumentNode;
 use GraphQL\Language\AST\FieldNode;
 use GraphQL\Language\AST\FloatValueNode;
+use GraphQL\Language\AST\InlineFragmentNode;
 use GraphQL\Language\AST\IntValueNode;
+use GraphQL\Language\AST\NamedTypeNode;
 use GraphQL\Language\AST\NameNode;
 use GraphQL\Language\AST\Node;
 use GraphQL\Language\AST\NodeKind;
@@ -57,12 +59,12 @@ class GraphqlQueryEditor
      */
     public function addFieldIn(string $query, array $path, string $field): string
     {
-        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
+        $ast       = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
         $operation = $this->getFirstOperationNode($ast);
         $target    = $this->getFieldSelection($operation, $path);
         foreach (preg_split('/\s+/', $field) as $new) {
-            if (!$this->findFieldSelectionByName($target, $new)) {
-                $this->createFieldSelectionIn($target, $new);
+            if (!$this->findNodeSelectionByName($target, $new)) {
+                $this->createNodeSelectionIn($target, $new);
             }
         }
 
@@ -84,12 +86,12 @@ class GraphqlQueryEditor
      */
     public function addArgumentIn(string $query, array $path, string $key, $value): string
     {
-        $ast = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
-        $operationField = array_shift($path); // e.g. products
-        $argumentName   = array_shift($path); // e.g. filter
-        $operationField = $this->getFieldSelection($this->getFirstOperationNode($ast), [$operationField]);
-        $argument       = $argumentName ? $this->getArgument($operationField, $argumentName) : $operationField;
-        $target         = $this->getArgumentField($argument, $path);
+        $ast                = \GraphQL\Language\Parser::parse(new \GraphQL\Language\Source($query));
+        $operationFieldName = array_shift($path); // e.g. products
+        $argumentName       = array_shift($path); // e.g. filter
+        $operationField     = $this->getFieldSelection($this->getFirstOperationNode($ast), [$operationFieldName]);
+        $argument           = $argumentName ? $this->getArgument($operationField, $argumentName) : $operationField;
+        $target             = $this->getArgumentField($argument, $path);
         $this->setArgumentFieldIn($target, $key, $value);
 
         return \GraphQL\Language\Printer::doPrint($ast);
@@ -147,7 +149,7 @@ class GraphqlQueryEditor
             return $node;
         }
 
-        $field = $this->findFieldSelectionByName($node, $path[0]) ?? $this->createFieldSelectionIn($node, $path[0]);
+        $field = $this->findNodeSelectionByName($node, $path[0]) ?? $this->createNodeSelectionIn($node, $path[0]);
 
         return $this->getFieldSelection($field, slice($path, 1));
     }
@@ -171,17 +173,42 @@ class GraphqlQueryEditor
     /**
      * @param FieldNode|OperationDefinitionNode $node
      * @param string $name
-     * @return FieldNode|null
+     * @return Node|null
      */
-    private function findFieldSelectionByName(Node $node, string $name): ?FieldNode
+    private function findNodeSelectionByName(Node $node, string $name): ?Node
     {
         $children = is_object($node->selectionSet) ? $node->selectionSet->selections : [];
         foreach ($children as $field) {
-            if ($field->name && $field->name->value === $name) {
+            if ($this->isFieldNodeMatch($field, $name) || $this->isFragmentMatch($field, $name)) {
                 return $field;
             }
         }
         return null;
+    }
+
+    private function isFieldNodeMatch(Node $node, string $name): bool
+    {
+        return $node instanceof FieldNode &&
+            $node->name->value === $name;
+    }
+
+    private function isFragmentMatch(Node $node, string $name): bool
+    {
+        return $node instanceof InlineFragmentNode &&
+            $this->isFragmentIdentifier($name) &&
+            $node->typeCondition->name->value === substr($name, 7);
+    }
+
+    private function isFragmentIdentifier(string $name): bool
+    {
+        return substr($name, 0, 7) === '... on ';
+    }
+
+    private function createNodeSelectionIn(Node $node, string $name): Node
+    {
+        return $this->isFragmentIdentifier($name)
+            ? $this->createFragmentSelectionIn($node, $name)
+            : $this->createFieldSelectionIn($node, $name);
     }
 
     /**
@@ -201,6 +228,19 @@ class GraphqlQueryEditor
         $node->selectionSet->selections[$this->nextIndex($node->selectionSet->selections)] = $field;
 
         return $field;
+    }
+
+    private function createFragmentSelectionIn(Node $node, string $name): InlineFragmentNode
+    {
+        $fragment = new InlineFragmentNode([
+            'typeCondition' => new NamedTypeNode(['name' => new NameNode(['value' => substr($name, 7)]),]),
+            'directives'    => new NodeList([]),
+            'selectionSet'  => new SelectionSetNode(['selections' => []]),
+        ]);
+
+        $node->selectionSet->selections[$this->nextIndex($node->selectionSet->selections)] = $fragment;
+
+        return $fragment;
     }
 
     /**
@@ -227,7 +267,6 @@ class GraphqlQueryEditor
      */
     private function setArgumentFieldIn(Node $target, string $key, $value): void
     {
-
         /** @see \GraphQL\Language\AST\ValueNode */
         $types = [
             'string'  => StringValueNode::class,
@@ -241,13 +280,13 @@ class GraphqlQueryEditor
             throw new \RuntimeException('Unable to set GraphQL argument value type "%s"', $type);
         }
 
-        $valueInstance = $this->getArgumentValueContainerFor($target, $key);
+        $valueInstance        = $this->getArgumentValueContainerFor($target, $key);
         $valueInstance->value = new $types[$type](['value' => $value]);
     }
 
     private function getArgumentValueContainerFor(Node $target, string $name): Node
     {
-        if ($target instanceof ObjectFieldNode) {
+        if ($target instanceof ObjectFieldNode || $target instanceof ArgumentNode) {
             $valueInstance = $this->findObjectFieldByName($target, $name) ?? $this->createObjectFieldIn($target, $name);
         } elseif ($target instanceof FieldNode) {
             $valueInstance = $this->findArgumentByName($target, $name) ?? $this->createArgument($target, $name);

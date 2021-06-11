@@ -11,9 +11,29 @@ use PHPUnit\Framework\TestCase;
 
 class GraphqlQueryEditorTest extends TestCase
 {
-    public function testSetsGivenFieldsOnQuery(): void
+    public function queryPrefixDataProvider(): array
     {
-        $query = '{
+        return [
+            'no prefix'   => ['', ''],
+            'only query'  => ['query ', ''],
+            'named query' => ['query ExampleQuery ', 'query ExampleQuery '],
+        ];
+    }
+
+    public function mutationPrefixDataProvider(): array
+    {
+        return [
+            'only mutation'  => ['mutation ', 'mutation '],
+            'named mutation' => ['mutation ExampleMutation ', 'mutation ExampleMutation '],
+        ];
+    }
+
+    /**
+     * @dataProvider queryPrefixDataProvider
+     */
+    public function testSetsGivenFieldsOnQuery(string $inputPrefix, string $expectedPrefix): void
+    {
+        $query = $inputPrefix . '{
   products(filter: {name: {match: "Tank"}}) {
     total_count
     items {
@@ -27,7 +47,7 @@ class GraphqlQueryEditorTest extends TestCase
 }
 ';
 
-        $expected = '{
+        $expected = $expectedPrefix . '{
   products(filter: {name: {match: "Tank"}}) {
     total_count
     items {
@@ -46,7 +66,7 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }
 ';
-        $sut = new GraphqlQueryEditor();
+        $sut      = new GraphqlQueryEditor();
 
         // new field in existing query object
         $query = $sut->addFieldIn($query, ['products', 'items', 'small_image'], 'url_webp');
@@ -60,9 +80,12 @@ class GraphqlQueryEditorTest extends TestCase
         $this->assertSame($expected, $query);
     }
 
-    public function testSetsGivenArgumentsOnQuery()
+    /**
+     * @dataProvider queryPrefixDataProvider
+     */
+    public function testSetsGivenArgumentsOnQuery(string $inputPrefix, string $expectedPrefix): void
     {
-        $query = '{
+        $query = $inputPrefix . '{
   products {
     total_count
     items {
@@ -76,7 +99,7 @@ class GraphqlQueryEditorTest extends TestCase
 }
 ';
 
-        $expected = '{
+        $expected = $expectedPrefix . '{
   products(filter: {name: {match: "Tank"}}, pageSize: 2) {
     total_count
     items {
@@ -89,12 +112,197 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }
 ';
-        $sut = new GraphqlQueryEditor();
+        $sut      = new GraphqlQueryEditor();
 
         $query = $sut->addArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
 
         $query = $sut->addArgumentIn($query, ['products'], 'pageSize', 2);
 
         $this->assertSame($expected, $query);
+    }
+
+    /**
+     * @dataProvider queryPrefixDataProvider
+     */
+    public function testHandlesFieldsInInlineFragments(string $inputPrefix, string $expectedPrefix): void
+    {
+        $query = $inputPrefix . '{
+  cart(cart_id: "%cartId") {
+    items {
+      quantity
+      ... on SimpleCartItem {
+        customizable_options {
+          label
+          values {
+            label
+            value
+            price {
+              value
+              type
+            }
+          }
+        }
+      }
+      ... on BundleCartItem {
+        bundle_options {
+          id
+          label
+          values {
+            quantity
+            label
+          }
+        }
+        customizable_options {
+          label
+          values {
+            label
+            value
+            price {
+              value
+              type
+            }
+          }
+        }
+      }
+    }
+  }
+}';
+
+        $expected = $expectedPrefix . '{
+  cart(cart_id: "%cartId") {
+    items {
+      quantity
+      ... on SimpleCartItem {
+        customizable_options {
+          label
+          values {
+            label
+            value
+            price {
+              value
+              type
+            }
+            foo
+          }
+        }
+      }
+      ... on BundleCartItem {
+        bundle_options {
+          id
+          label
+          values {
+            quantity
+            label
+          }
+        }
+        customizable_options {
+          label
+          values {
+            label
+            value
+            price {
+              value
+              type
+            }
+            bar
+          }
+        }
+      }
+      ... on NewFragment {
+        customizable_options {
+          values {
+            baz
+          }
+        }
+      }
+    }
+  }
+}';
+
+        $sut = new GraphqlQueryEditor();
+
+        $pathInFirstFragment = ['cart', 'items', '... on SimpleCartItem', 'customizable_options', 'values'];
+        $query               = $sut->addFieldIn($query, $pathInFirstFragment, 'foo');
+
+        $pathInSecondFragment = ['cart', 'items', '... on BundleCartItem', 'customizable_options', 'values'];
+        $query                = $sut->addFieldIn($query, $pathInSecondFragment, 'bar');
+
+        $pathInNewFragment = ['cart', 'items', '... on NewFragment', 'customizable_options', 'values'];
+        $query             = $sut->addFieldIn($query, $pathInNewFragment, 'baz');
+
+        $this->assertSame($expected, trim($query));
+
+    }
+
+    /**
+     * @dataProvider mutationPrefixDataProvider
+     */
+    public function testAddsArgumentsAndFieldsToMutations(string $inputPrefix, string $expectedPrefix): void
+    {
+        $query    = $inputPrefix . '{
+  applyCouponToCart (
+    input: {
+      cart_id: "${this.cartId}",
+      coupon_code: "${couponCode}",
+    }
+  )
+  {
+    cart {
+      items {
+        prices {
+          row_total {
+            value
+          }
+        }
+        product_type
+        ... on SimpleCartItem {
+          customizable_options {
+            values {
+              price {
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}';
+        $expected = $expectedPrefix . '{
+  applyCouponToCart(input: {cart_id: "${this.cartId}", coupon_code: "${couponCode}", special: true}) {
+    cart {
+      items {
+        prices {
+          row_total {
+            value
+            currency
+          }
+        }
+        product_type
+        ... on SimpleCartItem {
+          customizable_options {
+            values {
+              price {
+                value
+              }
+              foo
+            }
+          }
+        }
+      }
+    }
+  }
+}';
+
+        $sut = new GraphqlQueryEditor();
+
+        $query = $sut->addArgumentIn($query, ['applyCouponToCart', 'input'], 'special', true);
+        $query = $sut->addFieldIn($query, ['applyCouponToCart', 'cart', 'items', 'prices', 'row_total'], 'currency');
+
+        $path  = ['applyCouponToCart', 'cart', 'items', '... on SimpleCartItem', 'customizable_options', 'values'];
+        $query = $sut->addFieldIn($query, $path, 'foo');
+
+        $this->assertSame($expected, trim($query));
+
     }
 }
