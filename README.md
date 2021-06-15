@@ -68,6 +68,25 @@ public function execute(Observer $event)
 }
 ```
 
+The result of the example method call
+```php
+$gqlEditor->addFieldIn($queryString, ['products', 'items', 'products', 'small_image'], 'label url_webp')
+```
+is that in the query the fields at the specified path are set:
+
+```graphql
+products {
+  items {
+    products {
+      small_image {
+        label
+        url_webp
+      }
+    }
+  }
+}
+```
+
 Both the `addFieldIn` and the `addArgumentIn` methods are idempotent, so if the specified values already exist in the
 query string they are not changed.
 
