@@ -23,6 +23,7 @@ use GraphQL\Language\AST\NullValueNode;
 use GraphQL\Language\AST\ObjectFieldNode;
 use GraphQL\Language\AST\ObjectValueNode;
 use GraphQL\Language\AST\OperationDefinitionNode;
+use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\AST\StringValueNode;
 use function array_slice as slice;
@@ -143,7 +144,7 @@ class GraphqlQueryEditor
      * @param string[] $path
      * @return Node
      */
-    private function getFieldSelection(Node $node, array $path): FieldNode
+    private function getFieldSelection(Node $node, array $path): SelectionNode
     {
         if (empty($path)) {
             return $node;

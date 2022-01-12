@@ -185,6 +185,7 @@ class GraphqlQueryEditorTest extends TestCase
             foo
           }
         }
+        id
       }
       ... on BundleCartItem {
         bundle_options {
@@ -224,6 +225,9 @@ class GraphqlQueryEditorTest extends TestCase
         $pathInFirstFragment = ['cart', 'items', '... on SimpleCartItem', 'customizable_options', 'values'];
         $query               = $sut->addFieldIn($query, $pathInFirstFragment, 'foo');
 
+        $anotherPathInFirstFragment = ['cart', 'items', '... on SimpleCartItem'];
+        $query               = $sut->addFieldIn($query, $anotherPathInFirstFragment, 'id');
+
         $pathInSecondFragment = ['cart', 'items', '... on BundleCartItem', 'customizable_options', 'values'];
         $query                = $sut->addFieldIn($query, $pathInSecondFragment, 'bar');
 
@@ -231,7 +235,6 @@ class GraphqlQueryEditorTest extends TestCase
         $query             = $sut->addFieldIn($query, $pathInNewFragment, 'baz');
 
         $this->assertSame($expected, trim($query));
-
     }
 
     /**
@@ -304,5 +307,54 @@ class GraphqlQueryEditorTest extends TestCase
 
         $this->assertSame($expected, trim($query));
 
+    }
+
+    public function testAddPriceRangetoUpdateCartItemsQuery(): void
+    {
+        $query = 'mutation updateCartItemQtyMutation($cartId: String!, $itemId: Int, $qty: Float) {
+  updateCartItems(input: {cart_id: $cartId, cart_items: [{cart_item_id: $itemId, quantity: $qty}]}) {
+    cart {
+      items {
+        id
+        errors
+        product_type
+        product {
+          id
+          name
+        }
+      }
+    }
+  }
+}';
+        $expected = 'mutation updateCartItemQtyMutation($cartId: String!, $itemId: Int, $qty: Float) {
+  updateCartItems(input: {cart_id: $cartId, cart_items: [{cart_item_id: $itemId, quantity: $qty}]}) {
+    cart {
+      items {
+        id
+        errors
+        product_type
+        product {
+          id
+          name
+          price_range {
+            minimum_price {
+              regular_price {
+                value
+                currency
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}';
+
+        $sut = new GraphqlQueryEditor();
+
+        $path = ['updateCartItems', 'cart', 'items', 'product', 'price_range', 'minimum_price', 'regular_price'];
+        $query = $sut->addFieldIn($query, $path, 'value currency');
+
+        $this->assertSame($expected, trim($query));
     }
 }
