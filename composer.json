@@ -2,7 +2,9 @@
     "name": "hyva-themes/magento2-graphql-view-model",
     "description": "Provide ability to customize GraphQL queries and mutations for Hyvä themes.",
     "require": {
-        "php": ">=7.3.0"
+        "php": ">=7.3.0",
+        "magento/framework": "^101.0.0 || ^102.0.0 || ^103.0.0",
+        "webonyx/graphql-php": "^14.0.0"
     },
     "type": "magento2-module",
     "license": [
