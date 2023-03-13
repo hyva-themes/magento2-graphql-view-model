@@ -48,7 +48,7 @@ class GraphqlQueryEditorTest extends TestCase
 ';
 
         $expected = $expectedPrefix . '{
-  products(filter: {name: {match: "Tank"}}) {
+  products(filter: { name: { match: "Tank" } }) {
     total_count
     items {
       name
@@ -100,7 +100,7 @@ class GraphqlQueryEditorTest extends TestCase
 ';
 
         $expected = $expectedPrefix . '{
-  products(filter: {name: {match: "Tank"}}, pageSize: 2) {
+  products(filter: { name: { match: "Tank" } }, pageSize: 2) {
     total_count
     items {
       name
@@ -112,7 +112,7 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }
 ';
-        $sut      = new GraphqlQueryEditor();
+        $sut   = new GraphqlQueryEditor();
 
         $query = $sut->addArgumentIn($query, ['products', 'filter', 'name'], 'match', 'Tank');
 
@@ -272,7 +272,9 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }';
         $expected = $expectedPrefix . '{
-  applyCouponToCart(input: {cart_id: "${this.cartId}", coupon_code: "${couponCode}", special: true}) {
+  applyCouponToCart(
+    input: { cart_id: "${this.cartId}", coupon_code: "${couponCode}", special: true }
+  ) {
     cart {
       items {
         prices {
@@ -327,7 +329,9 @@ class GraphqlQueryEditorTest extends TestCase
   }
 }';
         $expected = 'mutation updateCartItemQtyMutation($cartId: String!, $itemId: Int, $qty: Float) {
-  updateCartItems(input: {cart_id: $cartId, cart_items: [{cart_item_id: $itemId, quantity: $qty}]}) {
+  updateCartItems(
+    input: { cart_id: $cartId, cart_items: [{ cart_item_id: $itemId, quantity: $qty }] }
+  ) {
     cart {
       items {
         id
