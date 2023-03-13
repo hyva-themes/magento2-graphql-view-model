@@ -7,6 +7,8 @@
 
 namespace Hyva\GraphqlViewModel\Model;
 
+use function array_keys as keys;
+use function array_slice as slice;
 use GraphQL\Language\AST\ArgumentNode;
 use GraphQL\Language\AST\BooleanValueNode;
 use GraphQL\Language\AST\DocumentNode;
@@ -26,8 +28,6 @@ use GraphQL\Language\AST\OperationDefinitionNode;
 use GraphQL\Language\AST\SelectionNode;
 use GraphQL\Language\AST\SelectionSetNode;
 use GraphQL\Language\AST\StringValueNode;
-use function array_slice as slice;
-use function array_keys as keys;
 
 class GraphqlQueryEditor
 {
@@ -223,7 +223,7 @@ class GraphqlQueryEditor
             'name'         => new NameNode(['value' => $name]),
             'arguments'    => new NodeList([]),
             'directives'   => new NodeList([]),
-            'selectionSet' => new SelectionSetNode(['selections' => []]),
+            'selectionSet' => new SelectionSetNode(['selections' => new NodeList([])]),
         ]);
 
         $node->selectionSet->selections[$this->nextIndex($node->selectionSet->selections)] = $field;
@@ -234,9 +234,9 @@ class GraphqlQueryEditor
     private function createFragmentSelectionIn(Node $node, string $name): InlineFragmentNode
     {
         $fragment = new InlineFragmentNode([
-            'typeCondition' => new NamedTypeNode(['name' => new NameNode(['value' => substr($name, 7)]),]),
+            'typeCondition' => new NamedTypeNode(['name' => new NameNode(['value' => substr($name, 7)])]),
             'directives'    => new NodeList([]),
-            'selectionSet'  => new SelectionSetNode(['selections' => []]),
+            'selectionSet'  => new SelectionSetNode(['selections' => new NodeList([])]),
         ]);
 
         $node->selectionSet->selections[$this->nextIndex($node->selectionSet->selections)] = $fragment;
@@ -278,11 +278,15 @@ class GraphqlQueryEditor
         ];
         $type  = gettype($value);
         if (!isset($types[$type])) {
-            throw new \RuntimeException('Unable to set GraphQL argument value type "%s"', $type);
+            throw new \RuntimeException(sprintf('Unable to set GraphQL argument value type "%s"', $type));
         }
 
+        $valueArg = in_array($type, ['integer', 'double'], true)
+            ? (string) $value
+            : $value;
+
         $valueInstance        = $this->getArgumentValueContainerFor($target, $key);
-        $valueInstance->value = new $types[$type](['value' => $value]);
+        $valueInstance->value = new $types[$type](['value' => $valueArg]);
     }
 
     private function getArgumentValueContainerFor(Node $target, string $name): Node
