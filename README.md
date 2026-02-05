@@ -36,8 +36,8 @@ products(filter: {} pageSize: 20) {
 }", ['type' => $type])
 ?>
 ```
-The first argument is the event name suffix.  
-The second argument is the query or mutation as a string.  
+The first argument is the event name suffix.
+The second argument is the query or mutation as a string.
 The third argument is optional and - if specified - will be merged into the event arguments.
 
 In the above example the full event name would be `hyva_graphql_render_before_product_list_query`
@@ -48,21 +48,21 @@ To manipulate a query in an event observer, the GraphqlQueryEditor can be used:
 public function execute(Observer $event)
 {
     $gqlEditor = new GraphqlQueryEditor(); // or use dependency injection
-    
+
     $queryString = $event->getData('gql_container')->getData('query');
     $linkType  = $event->getData('type');
     $path  = ['products', 'items', ($linkType ? "{$linkType}_products" : 'products'), 'small_image'];
-    
+
     // add a single field to a result object
     $queryString = $gqlEditor->addFieldIn($queryString, $path, 'url_webp');
-    
+
     // add multiple fields to a result object
     $queryString = $gqlEditor->addFieldIn($queryString, ['products', 'items', 'products', 'image'], 'label url_webp');
-    
+
     // add a query argument
     $queryString = $gqlEditor->addArgumentIn($queryString, ['products', 'filter', 'name'], 'match', 'Tank');
     $queryString = $gqlEditor->addArgumentIn($queryString, ['products'], 'pageSize', 2);
-    
+
     // set updated query back on container
     $event->getData('gql_container')->setData('query', $queryString);
 }
@@ -95,7 +95,7 @@ The `addArgumentIn` method can be used to add new arguments to queries or mutati
 For more examples including inline fragments please have a look at the `\Hyva\GraphqlViewModel\Model\GraphqlQueryEditorTest` class.
 
 ## Installation
-  
+
 1. Install via composer
    ```
    composer config repositories.hyva-themes/magento2-graphql-view-model git git@github.com:hyva-themes/magento2-graphql-view-model.git
@@ -107,11 +107,14 @@ For more examples including inline fragments please have a look at the `\Hyva\Gr
    ```
 
 ## Configuration
-  
+
 No configuration needed.
 
-## License
+### License
 
-The BSD-3-Clause License. Please see [License File](LICENSE.txt) for more information.
+This package is licensed under the **Open Software License (OSL 3.0)**.
+
+* **Copyright:** Copyright © 2020-present Hyvä Themes. All rights reserved.
+* **License Text (OSL 3.0):** The full text of the OSL 3.0 license can be found in the `LICENSE.txt` file within this package, and is also available online at [http://opensource.org/licenses/osl-3.0.php](http://opensource.org/licenses/osl-3.0.php).
 
 [ico-compatibility]: https://img.shields.io/badge/magento-%202.3%20|%202.4-brightgreen.svg?logo=magento&longCache=true&style=flat-square
