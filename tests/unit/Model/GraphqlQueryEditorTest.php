@@ -310,7 +310,6 @@ class GraphqlQueryEditorTest extends TestCase
         $query = $sut->addFieldIn($query, $path, 'foo');
 
         $this->assertSame($expected, trim($query));
-
     }
 
     public function testAddPriceRangetoUpdateCartItemsQuery(): void

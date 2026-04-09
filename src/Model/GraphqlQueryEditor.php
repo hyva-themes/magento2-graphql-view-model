@@ -278,6 +278,7 @@ class GraphqlQueryEditor
             'NULL'    => NullValueNode::class,
             'boolean' => BooleanValueNode::class,
         ];
+        // phpcs:ignore Magento2.Functions.DiscouragedFunction.Discouraged -- no alternative for type detection
         $type  = gettype($value);
         if (!isset($types[$type])) {
             throw new \RuntimeException(sprintf('Unable to set GraphQL argument value type "%s"', $type));

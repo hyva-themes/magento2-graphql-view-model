@@ -33,7 +33,6 @@ class GraphqlViewModelTest extends TestCase
         $mockEventDispatcher = $this->createMock(EventManager::class);
         $sut = new GraphqlViewModel($mockEventDispatcher);
 
-
         $withAdditionalParams = $this->callback(function (array $params) use ($additionalParamValue) {
             return ($params['additional'] ?? false) === $additionalParamValue;
         });
